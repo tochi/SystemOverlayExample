@@ -1,22 +1,38 @@
 import SwiftUI
 import RealityKit
+import ARKit
 
 struct ImmersiveView: View {
   @Environment(AppModel.self) var appModel
   @ObservedObject var gestureModel: HandGestureModel
+  @State private var buttonPosition: SIMD3<Float> = [0, 0, 1]
 
   var body: some View {
-    RealityView { content in
-      content.add(createSphere(name: "leftCenter"))
-      content.add(createSphere(name: "rightCenter"))
-    } update: { content in
-      if let transform = gestureModel.leftHandFingerCenterTransform, let sphereEntity = findModelEntity(content: content, name: "leftCenter") {
-        sphereEntity.transform = Transform(matrix: transform)
+    RealityView { content, _  in
+    } update: { content, attachments  in
+      if let textEntity = attachments.entity(for: "textAttachment"), let transform = gestureModel.rightHandFingerCenterTransform {
+        textEntity.transform = Transform(matrix: transform)
+        content.add(textEntity)
       }
-      if let transform = gestureModel.rightHandFingerCenterTransform, let sphereEntity = findModelEntity(content: content, name: "rightCenter") {
-        sphereEntity.transform = Transform(matrix: transform)
+    } attachments: {
+      Attachment(id: "textAttachment") {
+        Text("Hello World")
+          .frame(width: 200, height: 100)
+          .background(Color.blue)
       }
     }
+    .overlay(
+      Button(action: {
+        print("Button tapped!")
+      }) {
+        Text("Follow Me")
+          .padding()
+          .background(Color.blue)
+          .foregroundColor(.white)
+          .cornerRadius(10)
+      }
+        .position(x: CGFloat(buttonPosition.x), y: CGFloat(buttonPosition.y))
+    )
     .task {
       await gestureModel.start()
     }
@@ -27,18 +43,6 @@ struct ImmersiveView: View {
       await gestureModel.monitorSessionEvents()
     }
     .persistentSystemOverlays(.hidden)
-  }
-  
-  private func createSphere(name: String) -> ModelEntity {
-    let sphereMesh = MeshResource.generateSphere(radius: 0.005)
-    let material = SimpleMaterial(color: .red, isMetallic: true)
-    let sphereEntity = ModelEntity(mesh: sphereMesh, materials: [material])
-    sphereEntity.name = name
-    return sphereEntity
-  }
-  
-  private func findModelEntity(content: RealityViewContent, name: String) -> ModelEntity? {
-    content.entities.first(where: { $0.name == name }) as? ModelEntity
   }
 }
 
