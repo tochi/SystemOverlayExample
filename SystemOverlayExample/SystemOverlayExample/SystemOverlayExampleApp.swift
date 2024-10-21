@@ -12,7 +12,7 @@ struct SystemOverlayExampleApp: App {
     }
         
     ImmersiveSpace(id: appModel.immersiveSpaceID) {
-      ImmersiveView()
+      ImmersiveView(gestureModel: HeartGestureModelContainer.handGestureModel)
         .environment(appModel)
         .onAppear {
           appModel.immersiveSpaceState = .open
@@ -21,6 +21,12 @@ struct SystemOverlayExampleApp: App {
           appModel.immersiveSpaceState = .closed
         }
     }
-    .immersionStyle(selection: .constant(.full), in: .full)
+    .immersionStyle(selection: .constant(.mixed), in: .mixed)
   }
 }
+
+@MainActor
+enum HeartGestureModelContainer {
+    private(set) static var handGestureModel = HandGestureModel()
+}
+
