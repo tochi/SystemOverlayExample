@@ -14,26 +14,26 @@ class HandGestureModel: ObservableObject, @unchecked Sendable {
           rightHandIndexFingerTip.isTracked  else { return nil }
     return rightHandIndexFingerTip.anchorFromJointTransform
   }
-  var rightHandMiddleFingerTipAnchorFromJointTransform: simd_float4x4? {
-    guard let rightHandMiddleFingerTip = latestHandTracking.right?.handSkeleton?.joint(.middleFingerTip),
-          rightHandMiddleFingerTip.isTracked  else { return nil }
-    return rightHandMiddleFingerTip.anchorFromJointTransform
+  var rightHandThumbFingerTipAnchorFromJointTransform: simd_float4x4? {
+    guard let rightHandThumbFingerTip = latestHandTracking.right?.handSkeleton?.joint(.thumbTip),
+          rightHandThumbFingerTip.isTracked  else { return nil }
+    return rightHandThumbFingerTip.anchorFromJointTransform
   }
   var originFromRightHandIndexFingerTipTransform: simd_float4x4? {
     guard let rightHandAnchorOriginFromAnchorTransfor = rightHandAnchorOriginFromAnchorTransform,
           let rightHandIndexFingerTipAnchorFromJointTransform = rightHandIndexFingerTipAnchorFromJointTransform else { return nil }
     return matrix_multiply(rightHandAnchorOriginFromAnchorTransfor, rightHandIndexFingerTipAnchorFromJointTransform)
   }
-  var originFromRightHandMiddleFingerTipTransform: simd_float4x4? {
+  var originFromRightHandThumbFingerTipTransform: simd_float4x4? {
     guard let rightHandAnchorOriginFromAnchorTransfor = rightHandAnchorOriginFromAnchorTransform,
-          let rightHandMiddleFingerTipAnchorFromJointTransform = rightHandMiddleFingerTipAnchorFromJointTransform else { return nil }
-    return matrix_multiply(rightHandAnchorOriginFromAnchorTransfor, rightHandMiddleFingerTipAnchorFromJointTransform)
+          let rightHandThumbFingerTipAnchorFromJointTransform = rightHandThumbFingerTipAnchorFromJointTransform else { return nil }
+    return matrix_multiply(rightHandAnchorOriginFromAnchorTransfor, rightHandThumbFingerTipAnchorFromJointTransform)
   }
   var rightHandFingerCenterTransform: simd_float4x4? {
     guard let originFromRightHandIndexFingerTipTransform = originFromRightHandIndexFingerTipTransform,
-          let originFromRightHandMiddleFingerTipTransform = originFromRightHandMiddleFingerTipTransform else { return nil }
+          let originFromRightHandThumbFingerTipTransform = originFromRightHandThumbFingerTipTransform else { return nil }
     let position1 = originFromRightHandIndexFingerTipTransform.columns.3.xyz
-    let position2 = originFromRightHandMiddleFingerTipTransform.columns.3.xyz
+    let position2 = originFromRightHandThumbFingerTipTransform.columns.3.xyz
     
     let centerPosition = (position1 + position2) * 0.5
     
