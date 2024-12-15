@@ -2,7 +2,13 @@ import SwiftUI
 
 struct SystemOverlayView: View {
   var body: some View {
-    Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+    Button {
+     print("Tapped")
+    } label: {
+      Image(systemName: "star")
+    }
+    .frame(width: 30, height: 30)
+    .cornerRadius(15)
   }
 }
 

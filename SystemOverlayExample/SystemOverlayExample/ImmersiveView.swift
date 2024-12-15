@@ -16,23 +16,9 @@ struct ImmersiveView: View {
       }
     } attachments: {
       Attachment(id: "textAttachment") {
-        Text("Hello World")
-          .frame(width: 200, height: 100)
-          .background(Color.blue)
+        SystemOverlayView()
       }
     }
-    .overlay(
-      Button(action: {
-        print("Button tapped!")
-      }) {
-        Text("Follow Me")
-          .padding()
-          .background(Color.blue)
-          .foregroundColor(.white)
-          .cornerRadius(10)
-      }
-        .position(x: CGFloat(buttonPosition.x), y: CGFloat(buttonPosition.y))
-    )
     .task {
       await gestureModel.start()
     }
