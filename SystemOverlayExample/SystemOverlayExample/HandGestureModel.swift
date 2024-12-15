@@ -1,9 +1,11 @@
 import ARKit
+import QuartzCore
 
 @MainActor
 class HandGestureModel: ObservableObject, @unchecked Sendable {
   let session = ARKitSession()
   var handTracking = HandTrackingProvider()
+  let worldTracking = WorldTrackingProvider()
   @Published var latestHandTracking: HandsUpdates = .init(left: nil, right: nil)
   var rightHandAnchorOriginFromAnchorTransform: simd_float4x4? {
     guard let rightHandAnchor = latestHandTracking.right, rightHandAnchor.isTracked else { return nil }
@@ -32,7 +34,7 @@ class HandGestureModel: ObservableObject, @unchecked Sendable {
   var rightHandFingerCenterTransform: simd_float4x4? {
       guard let originFromRightHandIndexFingerTipTransform = originFromRightHandIndexFingerTipTransform,
             let originFromRightHandThumbFingerTipTransform = originFromRightHandThumbFingerTipTransform,
-            let cameraTransform = originFromLeftHandIndexFingerTipTransform else { return nil }
+            let cameraTransform = headTransform else { return nil }
 
       let position1 = originFromRightHandIndexFingerTipTransform.columns.3.xyz
       let position2 = originFromRightHandThumbFingerTipTransform.columns.3.xyz
@@ -95,6 +97,10 @@ class HandGestureModel: ObservableObject, @unchecked Sendable {
     
     return centerMatrix
   }
+  var headTransform: simd_float4x4? {
+    guard let anchor = worldTracking.queryDeviceAnchor(atTimestamp: CACurrentMediaTime()) else { return nil }
+    return anchor.originFromAnchorTransform
+  }
   
   struct HandsUpdates {
     var left: HandAnchor?
@@ -105,7 +111,7 @@ class HandGestureModel: ObservableObject, @unchecked Sendable {
     do {
       if HandTrackingProvider.isSupported {
         print("ARKitSession starting.")
-        try await session.run([handTracking])
+        try await session.run([worldTracking, handTracking])
       }
     } catch {
       print("ARKitSession error:", error)
