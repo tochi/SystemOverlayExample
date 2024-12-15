@@ -30,17 +30,32 @@ class HandGestureModel: ObservableObject, @unchecked Sendable {
     return matrix_multiply(rightHandAnchorOriginFromAnchorTransfor, rightHandThumbFingerTipAnchorFromJointTransform)
   }
   var rightHandFingerCenterTransform: simd_float4x4? {
-    guard let originFromRightHandIndexFingerTipTransform = originFromRightHandIndexFingerTipTransform,
-          let originFromRightHandThumbFingerTipTransform = originFromRightHandThumbFingerTipTransform else { return nil }
-    let position1 = originFromRightHandIndexFingerTipTransform.columns.3.xyz
-    let position2 = originFromRightHandThumbFingerTipTransform.columns.3.xyz
-    
-    let centerPosition = (position1 + position2) * 0.5
-    
-    var centerMatrix = matrix_identity_float4x4
-    centerMatrix.columns.3 = simd_float4(centerPosition, 1)
-    
-    return centerMatrix
+      guard let originFromRightHandIndexFingerTipTransform = originFromRightHandIndexFingerTipTransform,
+            let originFromRightHandThumbFingerTipTransform = originFromRightHandThumbFingerTipTransform,
+            let cameraTransform = originFromLeftHandIndexFingerTipTransform else { return nil }
+
+      let position1 = originFromRightHandIndexFingerTipTransform.columns.3.xyz
+      let position2 = originFromRightHandThumbFingerTipTransform.columns.3.xyz
+
+      let centerPosition = (position1 + position2) * 0.5
+
+      // カメラ（ユーザーの視線）方向を取得
+      let cameraPosition = cameraTransform.columns.3.xyz
+
+      // 中心点からカメラ方向へのベクトルを求める
+      let forward = simd_normalize(cameraPosition - centerPosition)
+      let up = SIMD3<Float>(0, 1, 0)
+      let right = simd_normalize(simd_cross(up, forward))
+      let correctedUp = simd_cross(forward, right)
+
+      // 回転行列を構築
+      var orientationMatrix = matrix_identity_float4x4
+      orientationMatrix.columns.0 = simd_float4(right, 0)
+      orientationMatrix.columns.1 = simd_float4(correctedUp, 0)
+      orientationMatrix.columns.2 = simd_float4(forward, 0)
+      orientationMatrix.columns.3 = simd_float4(centerPosition, 1)
+
+      return orientationMatrix
   }
 
   var leftHandAnchorOriginFromAnchorTransform: simd_float4x4? {
