@@ -10,12 +10,12 @@ struct ImmersiveView: View {
   var body: some View {
     RealityView { content, _  in
     } update: { content, attachments  in
-      if let textEntity = attachments.entity(for: "textAttachment"), let transform = gestureModel.rightHandFingerCenterTransform {
-        textEntity.transform = Transform(matrix: transform)
-        content.add(textEntity)
+      if let systemOverlayEntity = attachments.entity(for: "systemOverlay"), let transform = gestureModel.rightHandFingerCenterTransform {
+        systemOverlayEntity.transform = Transform(matrix: transform)
+        content.add(systemOverlayEntity)
       }
     } attachments: {
-      Attachment(id: "textAttachment") {
+      Attachment(id: "systemOverlay") {
         SystemOverlayView()
       }
     }

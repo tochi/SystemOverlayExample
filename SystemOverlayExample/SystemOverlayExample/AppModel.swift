@@ -10,4 +10,5 @@ class AppModel {
     case open
   }
   var immersiveSpaceState = ImmersiveSpaceState.closed
+  var tapped: Bool = false
 }
