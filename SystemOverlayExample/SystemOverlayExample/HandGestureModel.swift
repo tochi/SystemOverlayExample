@@ -156,13 +156,13 @@ class HandGestureModel: ObservableObject, @unchecked Sendable {
   }
   
   func isRightHandFingersTouching() -> Bool {
-      guard let indexTransform = originFromRightHandIndexFingerTipTransform,
-            let thumbTransform = originFromRightHandThumbFingerTipTransform else {
-          return false
-      }
-      let position1 = indexTransform.columns.3.xyz
-      let position2 = thumbTransform.columns.3.xyz
-      let distance = simd_distance(position1, position2)
-      return distance <= 0.0
+    guard let indexTransform = originFromRightHandIndexFingerTipTransform,
+          let thumbTransform = originFromRightHandThumbFingerTipTransform else {
+        return false
+    }
+    let position1 = indexTransform.columns.3.xyz
+    let position2 = thumbTransform.columns.3.xyz
+    let distance = simd_distance(position1, position2)
+    return distance <= 0.01
   }
 }
