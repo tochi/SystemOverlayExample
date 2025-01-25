@@ -23,6 +23,7 @@ struct SystemOverlayExampleApp: App {
         }
         .onDisappear {
           appModel.immersiveSpaceState = .closed
+          appModel.tapped = false
         }
     }
     .immersionStyle(selection: .constant(.mixed), in: .mixed)

@@ -3,6 +3,8 @@ import RealityKit
 import ARKit
 
 struct ImmersiveView: View {
+  @Environment(\.openWindow) private var openWindow
+  @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
   @Environment(AppModel.self) var appModel
   @ObservedObject var gestureModel: HandGestureModel
   @State private var buttonPosition: SIMD3<Float> = [0, 0, 1]
@@ -29,6 +31,14 @@ struct ImmersiveView: View {
     }
     .task {
       await gestureModel.monitorSessionEvents()
+    }
+    .task {
+      for await _ in Timer.publish(every: 0.1, on: .main, in: .common).autoconnect().values {
+        if appModel.tapped {
+          await dismissImmersiveSpace()
+          openWindow(id: "SystemSettings")
+        }
+      }
     }
     .persistentSystemOverlays(.hidden)
   }
