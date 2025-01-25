@@ -52,8 +52,8 @@ class HandGestureModel: ObservableObject, @unchecked Sendable {
           let originFromRightHandThumbFingerTipTransform = originFromRightHandThumbFingerTipTransform,
           let cameraTransform = headTransform else { return nil }
 
-//    let position1 = originFromRightHandIndexFingerTipTransform.columns.3.xyz
-    let position1 = originFromRightHandMiddleFingerTipTransform.columns.3.xyz
+    let position1 = originFromRightHandIndexFingerTipTransform.columns.3.xyz
+//    let position1 = originFromRightHandMiddleFingerTipTransform.columns.3.xyz
     let position2 = originFromRightHandThumbFingerTipTransform.columns.3.xyz
 
     let centerPosition = (position1 + position2) * 0.5
@@ -74,10 +74,10 @@ class HandGestureModel: ObservableObject, @unchecked Sendable {
     orientationMatrix.columns.2 = simd_float4(forward, 0)
     orientationMatrix.columns.3 = simd_float4(centerPosition, 1)
 
-    // ここで「上に3cm」「奥に3cm」分の平行移動を追加
-    var translationMatrix = matrix_identity_float4x4
-    translationMatrix.columns.3.y = 0.03
-    orientationMatrix = matrix_multiply(orientationMatrix, translationMatrix)
+//    // ここで「上に3cm」「奥に3cm」分の平行移動を追加
+//    var translationMatrix = matrix_identity_float4x4
+//    translationMatrix.columns.3.y = 0.03
+//    orientationMatrix = matrix_multiply(orientationMatrix, translationMatrix)
     
     return orientationMatrix
   }
@@ -140,9 +140,9 @@ class HandGestureModel: ObservableObject, @unchecked Sendable {
           let thumbTransform = originFromRightHandThumbFingerTipTransform else {
         return false
     }
-//    let position1 = indexTransform.columns.3.xyz
-    let position1 = thumbTransform.columns.3.xyz
-    let position2 = middleTransform.columns.3.xyz
+    let position1 = indexTransform.columns.3.xyz
+    let position2 = thumbTransform.columns.3.xyz
+//    let position2 = middleTransform.columns.3.xyz
     let distance = simd_distance(position1, position2)
     print("distance:", distance)
     return distance <= 0.03
