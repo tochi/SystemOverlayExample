@@ -10,7 +10,11 @@ struct SystemOverlayExampleApp: App {
       ContentView()
         .environment(appModel)
     }
-        
+
+    WindowGroup("System Settings", id: "SystemSettings") {
+      SystemSettingsView()
+    }
+    
     ImmersiveSpace(id: appModel.immersiveSpaceID) {
       ImmersiveView(gestureModel: HeartGestureModelContainer.handGestureModel)
         .environment(appModel)
