@@ -1,6 +1,5 @@
 import SwiftUI
 import RealityKit
-import ARKit
 
 struct ImmersiveView: View {
   @Environment(\.openWindow) private var openWindow
