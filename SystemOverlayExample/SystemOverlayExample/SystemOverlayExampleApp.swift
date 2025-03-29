@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Main application entry point
 @main
 struct SystemOverlayExampleApp: App {
   @State private var systemOverlayViewModel = SystemOverlayViewModel()
