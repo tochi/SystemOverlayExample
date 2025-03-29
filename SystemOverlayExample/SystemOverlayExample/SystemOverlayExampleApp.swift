@@ -2,36 +2,24 @@ import SwiftUI
 
 @main
 struct SystemOverlayExampleApp: App {
-    
-  @State private var appModel = AppModel()
-    
+  @State private var systemOverlayViewModel = SystemOverlayViewModel()
+  
   var body: some Scene {
     WindowGroup {
       ContentView()
-        .environment(appModel)
-    }
-
-    WindowGroup("System Settings", id: "SystemSettings") {
-      SystemSettingsView()
     }
     
-    ImmersiveSpace(id: appModel.immersiveSpaceID) {
-      ImmersiveView(gestureModel: HeartGestureModelContainer.handGestureModel)
-        .environment(appModel)
-        .onAppear {
-          appModel.immersiveSpaceState = .open
-        }
-        .onDisappear {
-          appModel.immersiveSpaceState = .closed
-          appModel.tapped = false
-        }
+    WindowGroup("Front Hand", id: "FrontHand") {
+      FrontHandView()
     }
-    .immersionStyle(selection: .constant(.mixed), in: .mixed)
+    
+    WindowGroup("Back Hand", id: "BackHand") {
+      BackHandView()
+    }
+    
+    ImmersiveSpace(id: "ImmersiveSpace") {
+      ImmersiveView()
+        .environment(systemOverlayViewModel)
+    }
   }
 }
-
-@MainActor
-enum HeartGestureModelContainer {
-    private(set) static var handGestureModel = HandGestureModel()
-}
-
