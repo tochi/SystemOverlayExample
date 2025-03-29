@@ -7,5 +7,5 @@ enum FlipState {
 }
 
 @Observable class SystemOverlayViewModel {
-g   var flipState: FlipState = .front
+  var flipState: FlipState = .front
 }
