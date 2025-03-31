@@ -2,7 +2,8 @@ import SwiftUI
 import RealityKit
 import Combine
 
-class SubscriptionManager: ObservableObject {
+@Observable
+class SubscriptionManager {
   private var cancellables = Set<AnyCancellable>()
   
   func store(_ cancellable: AnyCancellable) {
@@ -15,7 +16,7 @@ struct ImmersiveView: View {
   @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
   @Environment(SystemOverlayViewModel.self) var viewModel
 
-  @StateObject private var subscriptionManager = SubscriptionManager()
+  @State private var subscriptionManager = SubscriptionManager()
   
   var body: some View {
     RealityView { content, attachments in
