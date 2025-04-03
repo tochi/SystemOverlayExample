@@ -10,12 +10,8 @@ struct HandGestureSystem: System {
   private static let systemOverlayQuery = EntityQuery(where: .has(BillboardComponent.self))
   
   private var anchorEntities: [AnchorEntity] = []
-  private var flipState: FlipState = .front
   private var previousFlipState: FlipState = .front
-  private var isClosed = false
   private var previousIsClosed = false
-  private let closeThreshold: Float = 0.03
-  private let verticalOffset: Float = 0.03
   
   init(scene: RealityKit.Scene) { }
   
@@ -28,7 +24,6 @@ struct HandGestureSystem: System {
     if newFlipState != previousFlipState {
       HandGestureSystem.handFlipPublisher.send(newFlipState)
       previousFlipState = newFlipState
-      flipState = newFlipState
     }
     
     let newIsClosed = areFingersTouching(anchorEntities: anchorEntities)
@@ -36,7 +31,6 @@ struct HandGestureSystem: System {
     if newIsClosed != previousIsClosed {
       HandGestureSystem.fingersClosePublisher.send(newIsClosed)
       previousIsClosed = newIsClosed
-      isClosed = newIsClosed
     }
     
     for entity in context.entities(matching: Self.systemOverlayQuery, updatingSystemWhen: .rendering) {
@@ -65,7 +59,7 @@ struct HandGestureSystem: System {
     
     let distance = simd_distance(position1, position2)
     
-    return !distance.isZero && distance <= closeThreshold
+    return !distance.isZero && distance <= 0.03
   }
 
   private func calculateCenterTransform(anchorEntities: [AnchorEntity]) -> simd_float4x4? {
@@ -79,7 +73,7 @@ struct HandGestureSystem: System {
     var transform = matrix_identity_float4x4
     transform.columns.3 = SIMD4<Float>(
       centerPosition.x,
-      centerPosition.y + verticalOffset,
+      centerPosition.y + 0.03,
       centerPosition.z,
       1
     )
