@@ -20,7 +20,15 @@ struct ImmersiveView: View {
   
   var body: some View {
     RealityView { content, attachments in
-      await setupHandTracking(content: content)
+      let session = SpatialTrackingSession()
+      let configuration = SpatialTrackingSession.Configuration(tracking: [.hand])
+      await session.run(configuration)
+      
+      let rightIndexFinger = AnchorEntity(.hand(.right, location: .indexFingerTip))
+      let rightThumbFinger = AnchorEntity(.hand(.right, location: .thumbTip))
+      
+      content.add(rightIndexFinger)
+      content.add(rightThumbFinger)
       
       if let systemOverlayEntity = attachments.entity(for: "systemOverlay") {
         systemOverlayEntity.components.set(BillboardComponent())
@@ -29,7 +37,27 @@ struct ImmersiveView: View {
       
       HandGestureSystem.registerSystem()
       
-      setupEventSubscriptions()
+      let fingerCloseSubscription = HandGestureSystem.fingersClosePublisher
+        .filter { $0 }
+        .first()
+        .sink { [viewModel] _ in
+          Task { @MainActor in
+            openWindow(id: viewModel.flipState == .front ? "FrontHand" : "BackHand")
+            await dismissImmersiveSpace()
+          }
+        }
+      
+      let handFlipSubscription = HandGestureSystem.handFlipPublisher
+        .sink { [viewModel] flipState in
+          Task { @MainActor in
+            viewModel.flipState = flipState
+          }
+        }
+      
+      Task { @MainActor in
+        subscriptionManager.store(fingerCloseSubscription)
+        subscriptionManager.store(handFlipSubscription)
+      }
     } attachments: {
       Attachment(id: "systemOverlay") {
         SystemOverlayView()
@@ -37,41 +65,5 @@ struct ImmersiveView: View {
       }
     }
     .persistentSystemOverlays(.hidden)
-  }
-  
-  private func setupHandTracking(content: RealityKit.RealityViewContent) async {
-    let session = SpatialTrackingSession()
-    let configuration = SpatialTrackingSession.Configuration(tracking: [.hand])
-    await session.run(configuration)
-    
-    let rightIndexFinger = AnchorEntity(.hand(.right, location: .indexFingerTip))
-    let rightThumbFinger = AnchorEntity(.hand(.right, location: .thumbTip))
-    
-    content.add(rightIndexFinger)
-    content.add(rightThumbFinger)
-  }
-  
-  private func setupEventSubscriptions() {
-    let fingerCloseSubscription = HandGestureSystem.fingersClosePublisher
-      .filter { $0 }
-      .first()
-      .sink { [viewModel] _ in
-        Task { @MainActor in
-          openWindow(id: viewModel.flipState == .front ? "FrontHand" : "BackHand")
-          await dismissImmersiveSpace()
-        }
-      }
-    
-    let handFlipSubscription = HandGestureSystem.handFlipPublisher
-      .sink { [viewModel] flipState in
-        Task { @MainActor in
-          viewModel.flipState = flipState
-        }
-      }
-    
-    Task { @MainActor in
-      subscriptionManager.store(fingerCloseSubscription)
-      subscriptionManager.store(handFlipSubscription)
-    }
   }
 }

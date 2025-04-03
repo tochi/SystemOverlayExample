@@ -23,18 +23,26 @@ struct HandGestureSystem: System {
     self.anchorEntities = context.entities(matching: Self.anchorQuery, updatingSystemWhen: .rendering)
       .compactMap { $0 as? AnchorEntity }
     
-    updateHandOrientation()
-    updateFingerProximity()
-    updateOverlayPosition(context: context)
-  }
-  
-  private mutating func updateHandOrientation() {
     let newFlipState = detectHandFlip(anchorEntities: anchorEntities)
     
     if newFlipState != previousFlipState {
       HandGestureSystem.handFlipPublisher.send(newFlipState)
       previousFlipState = newFlipState
       flipState = newFlipState
+    }
+    
+    let newIsClosed = areFingersTouching(anchorEntities: anchorEntities)
+    
+    if newIsClosed != previousIsClosed {
+      HandGestureSystem.fingersClosePublisher.send(newIsClosed)
+      previousIsClosed = newIsClosed
+      isClosed = newIsClosed
+    }
+    
+    for entity in context.entities(matching: Self.systemOverlayQuery, updatingSystemWhen: .rendering) {
+      if let transform = calculateCenterTransform(anchorEntities: anchorEntities) {
+        entity.transform = Transform(matrix: transform)
+      }
     }
   }
   
@@ -49,16 +57,6 @@ struct HandGestureSystem: System {
     return thumbToIndex > 0 ? .front : .back
   }
   
-  private mutating func updateFingerProximity() {
-    let newIsClosed = areFingersTouching(anchorEntities: anchorEntities)
-    
-    if newIsClosed != previousIsClosed {
-      HandGestureSystem.fingersClosePublisher.send(newIsClosed)
-      previousIsClosed = newIsClosed
-      isClosed = newIsClosed
-    }
-  }
-  
   private func areFingersTouching(anchorEntities: [AnchorEntity]) -> Bool {
     guard anchorEntities.count >= 2 else { return false }
     
@@ -69,15 +67,7 @@ struct HandGestureSystem: System {
     
     return !distance.isZero && distance <= closeThreshold
   }
-  
-  private func updateOverlayPosition(context: SceneUpdateContext) {
-    for entity in context.entities(matching: Self.systemOverlayQuery, updatingSystemWhen: .rendering) {
-      if let transform = calculateCenterTransform(anchorEntities: anchorEntities) {
-        entity.transform = Transform(matrix: transform)
-      }
-    }
-  }
-  
+
   private func calculateCenterTransform(anchorEntities: [AnchorEntity]) -> simd_float4x4? {
     guard anchorEntities.count >= 2 else { return nil }
 
