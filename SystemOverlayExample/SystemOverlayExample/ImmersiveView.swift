@@ -40,7 +40,7 @@ struct ImmersiveView: View {
       let fingerCloseSubscription = HandGestureSystem.fingersClosePublisher
         .filter { $0 }
         .first()
-        .sink { [viewModel] _ in
+        .sink { _ in
           Task { @MainActor in
             openWindow(id: viewModel.flipState == .front ? "FrontHand" : "BackHand")
             await dismissImmersiveSpace()
@@ -48,7 +48,7 @@ struct ImmersiveView: View {
         }
       
       let handFlipSubscription = HandGestureSystem.handFlipPublisher
-        .sink { [viewModel] flipState in
+        .sink { flipState in
           Task { @MainActor in
             viewModel.flipState = flipState
           }
