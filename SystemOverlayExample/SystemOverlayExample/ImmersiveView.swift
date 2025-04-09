@@ -1,49 +1,69 @@
 import SwiftUI
 import RealityKit
+import Combine
+
+@Observable
+class SubscriptionManager {
+  private var cancellables = Set<AnyCancellable>()
+  
+  func store(_ cancellable: AnyCancellable) {
+    cancellables.insert(cancellable)
+  }
+}
 
 struct ImmersiveView: View {
   @Environment(\.openWindow) private var openWindow
   @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
-  @Environment(AppModel.self) var appModel
-  @ObservedObject var gestureModel: HandGestureModel
-  @State private var buttonPosition: SIMD3<Float> = [0, 0, 1]
-  var systemOverlayView = SystemOverlayView()
+  @Environment(SystemOverlayViewModel.self) var viewModel
 
+  @State private var subscriptionManager = SubscriptionManager()
+  
   var body: some View {
-    RealityView { content, _  in
-    } update: { content, attachments  in
-      if let systemOverlayEntity = attachments.entity(for: "systemOverlay"), let transform = gestureModel.rightHandFingerCenterTransform {
-        appModel.tapped = gestureModel.isRightHandFingersTouching()
-        systemOverlayEntity.transform = Transform(matrix: transform)
+    RealityView { content, attachments in
+      let session = SpatialTrackingSession()
+      let configuration = SpatialTrackingSession.Configuration(tracking: [.hand])
+      await session.run(configuration)
+      
+      let rightIndexFinger = AnchorEntity(.hand(.right, location: .indexFingerTip))
+      let rightThumbFinger = AnchorEntity(.hand(.right, location: .thumbTip))
+      
+      content.add(rightIndexFinger)
+      content.add(rightThumbFinger)
+      
+      if let systemOverlayEntity = attachments.entity(for: "systemOverlay") {
+        systemOverlayEntity.components.set(BillboardComponent())
         content.add(systemOverlayEntity)
+      }
+      
+      HandGestureSystem.registerSystem()
+      
+      let fingerCloseSubscription = HandGestureSystem.fingersClosePublisher
+        .filter { $0 }
+        .first()
+        .sink { _ in
+          Task { @MainActor in
+            openWindow(id: viewModel.flipState == .front ? "FrontHand" : "BackHand")
+            await dismissImmersiveSpace()
+          }
+        }
+      
+      let handFlipSubscription = HandGestureSystem.handFlipPublisher
+        .sink { flipState in
+          Task { @MainActor in
+            viewModel.flipState = flipState
+          }
+        }
+      
+      Task { @MainActor in
+        subscriptionManager.store(fingerCloseSubscription)
+        subscriptionManager.store(handFlipSubscription)
       }
     } attachments: {
       Attachment(id: "systemOverlay") {
         SystemOverlayView()
-      }
-    }
-    .task {
-      await gestureModel.start()
-    }
-    .task {
-      await gestureModel.publishHandTrackingUpdates()
-    }
-    .task {
-      await gestureModel.monitorSessionEvents()
-    }
-    .task {
-      for await _ in Timer.publish(every: 0.1, on: .main, in: .common).autoconnect().values {
-        if appModel.tapped {
-          await dismissImmersiveSpace()
-          openWindow(id: "SystemSettings")
-        }
+          .environment(viewModel)
       }
     }
     .persistentSystemOverlays(.hidden)
   }
-}
-
-#Preview(immersionStyle: .full) {
-  ImmersiveView(gestureModel: HeartGestureModelContainer.handGestureModel)
-    .environment(AppModel())
 }
